@@ -8,6 +8,8 @@ import pickle
 import time
 from cv2 import cv2
 import os
+from DnnModels import * 
+from Utils import *
 
 class RecognizeVideo():
   """
@@ -27,13 +29,11 @@ class RecognizeVideo():
   def __init__(self, Detector: str, Embeddings: str, TrainedRecognizer: str, Labels: str):
     # load our serialized face detector from disk
     print("[INFO] loading face detector...")
-    protoPath = os.path.sep.join([Detector, "deploy.prototxt"])
-    modelPath = os.path.sep.join([Detector, "res10_300x300_ssd_iter_140000.caffemodel"])
-    self.detector =  cv2.dnn.readNetFromCaffe(protoPath, modelPath)
+    self.detector = CaffeModel(Detector)
 
     # load our serialized face embedding model from disk
     print("[INFO] loading face recognizer...")
-    self.embedder =  cv2.dnn.readNetFromTorch(Embeddings)
+    self.embedder =  TorchModel(Embeddings)
 
     # load the actual face recognition model along with the label encoder
     self.recognizer = pickle.loads(open(TrainedRecognizer, "rb").read())
@@ -74,7 +74,7 @@ class RecognizeVideo():
       for i in range(0, detections.shape[2]):
         # extract the confidence (i.e., probability) associated with
         # the prediction
-        confidence = detections[0, 0, i, 2]
+        confidence = GetConfidence(detections, i)
         
         # filter out weak detections
         if confidence > 0.5:
@@ -96,14 +96,14 @@ class RecognizeVideo():
           # quantification of the face
           faceBlob =  cv2.dnn.blobFromImage(face, 1.0 / 255,
             (96, 96), (0, 0, 0), swapRB=True, crop=False)
-          embedder.setInput(faceBlob)
-          vec = embedder.forward()
+          self.embedder.setInput(faceBlob)
+          vec = self.embedder.forward()
           
           # perform classification to recognize the face
-          preds = recognizer.predict_proba(vec)[0]
+          preds = self.recognizer.predict_proba(vec)[0]
           j = np.argmax(preds)
           proba = preds[j]
-          name = le.classes_[j]
+          name = self.le.classes_[j]
           
           # draw the bounding box of the face along with the
           # associated probability
@@ -117,9 +117,8 @@ class RecognizeVideo():
       # update the FPS counter
       fps.update()
 
-      # show the output frame
-      cv2.imshow("Frame", frame)
-      key =  cv2.waitKey(1) & 0xFF
+      # show the output frame and wait for key press
+      key = ShowFrameAndWait(frame)
       
       # if the `q` key was pressed, break from the loop
       if key == ord("q"):
