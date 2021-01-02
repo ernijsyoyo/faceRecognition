@@ -7,8 +7,8 @@ from cv2 import cv2
 import os
 import time
 import re
-from Utils import *
-from DnnModels import *
+from src.Utils import *
+from src.DnnModels import *
 
 class EmbeddingExtractor():
   """Object for extracting facial embeddings which are used to train a ML model
@@ -36,16 +36,15 @@ class EmbeddingExtractor():
     EmbeddingModel : str
         Torch DNN Model for extracting facial embeddings
     """
-  def __init__(self, Dataset: str, EmbeddingOutput: str, FaceDetector: str, EmbeddingModel: str):
+  def __init__(self, Dataset: str, EmbeddingOutput: str, EmbeddingModel: str, FaceDetector: str):
     self._DATASET = Dataset
     self._EMBEDDING_OUTPUT = EmbeddingOutput
-    self._EMBEDDINGMODEL = EmbeddingModel 
 
     print("[INFO] loading face detector...")
-    self.detector = CaffeModel(FaceDetector)
+    self.Caffe = CaffeModel(FaceDetector)
     
     print("[INFO] loading face recognizer...")
-    self.embedder = TorchModel(EmbeddingModel)
+    self.Torch = TorchModel(EmbeddingModel)
 
   def GetImage(self, imagePath: str):
     """
@@ -64,7 +63,7 @@ class EmbeddingExtractor():
     image = cv2.imread(imagePath)
     return imutils.resize(image, width=600)
 
-  def ProcessFolders(self, imageFolder):
+  def ProcessFolders(self):
     """
       Recursively scan through a folder and create serialized dict object of facial embeddings and labels for all photos found.
       Labels are taken from sub-directory names
@@ -132,8 +131,8 @@ class EmbeddingExtractor():
       (104.0, 177.0, 123.0), swapRB=False, crop=False)
 
     # Apply Caffe face detector to localize faces in the input image
-    self.detector.setInput(imageBlob)
-    detections = self.detector.forward()
+    self.Caffe.detector.setInput(imageBlob)
+    detections = self.Caffe.detector.forward()
 
     # ensure at least one face was found
     if len(detections) > 0:
@@ -149,7 +148,7 @@ class EmbeddingExtractor():
         (startX, startY, endX, endY) = box.astype("int")
 
         # Use Torch to extract the embedding
-        vec = ExtractEmbedding(self.embedder, image, startX, endX, startY, endY)
+        vec = ExtractEmbedding(self.Torch.embedder, image, startX, endX, startY, endY)
         if vec is None:
           return None
 

@@ -39,5 +39,5 @@ def ExtractEmbedding(torch, image, startX: int, endX: int, startY: int, endY: in
   # embedding model to obtain the 128-d quantification
   faceBlob =  cv2.dnn.blobFromImage(face, 1.0 / 255,
       (96, 96), (0, 0, 0), swapRB=True, crop=False)
-  embedder.setInput(faceBlob)
-  return embedder.forward()
+  torch.setInput(faceBlob)
+  return torch.forward()

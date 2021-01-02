@@ -8,8 +8,8 @@ import pickle
 import time
 from cv2 import cv2
 import os
-from DnnModels import * 
-from Utils import *
+from src.DnnModels import * 
+from src.Utils import *
 
 class RecognizeVideo():
   """
@@ -29,11 +29,12 @@ class RecognizeVideo():
   def __init__(self, Detector: str, Embeddings: str, TrainedRecognizer: str, Labels: str):
     # load our serialized face detector from disk
     print("[INFO] loading face detector...")
-    self.detector = CaffeModel(Detector)
+    self.Caffe = CaffeModel(Detector)
 
     # load our serialized face embedding model from disk
     print("[INFO] loading face recognizer...")
-    self.embedder =  TorchModel(Embeddings)
+    cv2.dnn.readNetFromTorch(Embeddings)
+    self.Torch =  TorchModel(Embeddings)
 
     # load the actual face recognition model along with the label encoder
     self.recognizer = pickle.loads(open(TrainedRecognizer, "rb").read())
@@ -67,8 +68,8 @@ class RecognizeVideo():
       
       # apply OpenCV's deep learning-based face detector to localize
       # faces in the input image
-      self.detector.setInput(imageBlob)
-      detections = self.detector.forward()
+      self.Caffe.detector.setInput(imageBlob)
+      detections = self.Caffe.detector.forward()
 
       # loop over the detections
       for i in range(0, detections.shape[2]):
@@ -96,8 +97,8 @@ class RecognizeVideo():
           # quantification of the face
           faceBlob =  cv2.dnn.blobFromImage(face, 1.0 / 255,
             (96, 96), (0, 0, 0), swapRB=True, crop=False)
-          self.embedder.setInput(faceBlob)
-          vec = self.embedder.forward()
+          self.Torch.embedder.setInput(faceBlob)
+          vec = self.Torch.embedder.forward()
           
           # perform classification to recognize the face
           preds = self.recognizer.predict_proba(vec)[0]

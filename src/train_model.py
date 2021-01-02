@@ -9,10 +9,10 @@ class MachineLearningModel():
       Machine learning model (SVM) for associating particular image embeddings with labels
       Parameters
       ----------
-      Embeddings : str
-          Path to the serialized embeddings of an image
       Recognizer : str
           Path for outputting the trained ML model for image recognition
+      Embeddings : str
+          Path to the serialized embeddings of an image
       Labels : str
           Path for outputting serialized labels
       Returns
@@ -21,7 +21,7 @@ class MachineLearningModel():
           Image representation
   """
 
-  def __init__(self, Embeddings: str, Recognizer: str, Labels: str):
+  def __init__(self, Recognizer: str, Embeddings: str, Labels: str):
     self._RECOGNIZER = Recognizer
     self._LABELS = Labels
 

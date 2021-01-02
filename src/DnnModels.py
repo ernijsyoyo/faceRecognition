@@ -32,4 +32,5 @@ class TorchModel(metaclass=Singleton):
         Path to the folder which contains Torch model
     """
     def __init__(self, TorchLocation: str):
-        self.embedder = cv2.dnn.readNetFromTorch(TorchLocation)
+        print("Torch Model initializing!")
+        self.embedder = cv2.dnn.readNetFromTorch(str(TorchLocation))
